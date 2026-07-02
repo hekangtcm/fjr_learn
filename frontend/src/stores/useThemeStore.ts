@@ -7,37 +7,39 @@ interface ThemeStore {
   setTheme: (isDark: boolean) => void
 }
 
+function getInitialDark(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
+}
+
+function applyDark(isDark: boolean) {
+  if (typeof document === 'undefined') return
+  if (isDark) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+}
+
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set) => ({
-      isDark: window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false,
+      isDark: getInitialDark(),
       toggleTheme: () =>
         set((state) => {
           const isDark = !state.isDark
-          if (isDark) {
-            document.documentElement.classList.add('dark')
-          } else {
-            document.documentElement.classList.remove('dark')
-          }
+          applyDark(isDark)
           return { isDark }
         }),
       setTheme: (isDark) => {
-        if (isDark) {
-          document.documentElement.classList.add('dark')
-        } else {
-          document.documentElement.classList.remove('dark')
-        }
+        applyDark(isDark)
         set({ isDark })
       },
     }),
     {
       name: 'booknest-theme',
       onRehydrateStorage: () => (state) => {
-        if (state?.isDark) {
-          document.documentElement.classList.add('dark')
-        } else {
-          document.documentElement.classList.remove('dark')
-        }
+        applyDark(state?.isDark ?? false)
       },
     }
   )

@@ -5,10 +5,15 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardContent } from '@/components/ui/Card'
 import { ConfirmModal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { useCategoryStore } from '@/stores/useCategoryStore'
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/hooks/useCategories'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { CardSkeleton } from '@/components/ui/Skeleton'
 
 export default function CategoryManager() {
-  const { categories, addCategory, updateCategory, deleteCategory } = useCategoryStore()
+  const { data: categories, isLoading } = useCategories()
+  const createCategory = useCreateCategory()
+  const updateCategory = useUpdateCategory()
+  const deleteCategory = useDeleteCategory()
   const { showToast } = useToast()
 
   const [name, setName] = useState('')
@@ -26,18 +31,34 @@ export default function CategoryManager() {
     if (!name.trim()) return
 
     if (editingId) {
-      updateCategory(editingId, { name: name.trim(), color })
-      showToast('success', '分类更新成功')
-      setEditingId(null)
+      updateCategory.mutate(
+        { id: editingId, name: name.trim(), color },
+        {
+          onSuccess: () => {
+            showToast('success', '分类更新成功')
+            setEditingId(null)
+            setName('')
+            setColor('#3B82F6')
+          },
+          onError: () => showToast('error', '更新失败'),
+        }
+      )
     } else {
-      addCategory({ name: name.trim(), color })
-      showToast('success', '分类创建成功')
+      createCategory.mutate(
+        { name: name.trim(), color },
+        {
+          onSuccess: () => {
+            showToast('success', '分类创建成功')
+            setName('')
+            setColor('#3B82F6')
+          },
+          onError: () => showToast('error', '创建失败'),
+        }
+      )
     }
-    setName('')
-    setColor('#3B82F6')
   }
 
-  const startEdit = (cat: typeof categories[0]) => {
+  const startEdit = (cat: { id: string; name: string; color: string }) => {
     setEditingId(cat.id)
     setName(cat.name)
     setColor(cat.color)
@@ -45,10 +66,27 @@ export default function CategoryManager() {
 
   const handleDelete = () => {
     if (deleteId) {
-      deleteCategory(deleteId)
-      showToast('success', '分类已删除')
-      setDeleteId(null)
+      deleteCategory.mutate(deleteId, {
+        onSuccess: () => {
+          showToast('success', '分类已删除')
+          setDeleteId(null)
+        },
+        onError: () => showToast('error', '删除失败'),
+      })
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-6">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">分类管理</h1>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -96,7 +134,7 @@ export default function CategoryManager() {
               ))}
             </div>
             <div className="flex gap-2">
-              <Button type="submit">
+              <Button type="submit" isLoading={createCategory.isPending || updateCategory.isPending}>
                 <Plus className="h-4 w-4" />
                 {editingId ? '更新' : '添加'}
               </Button>
@@ -112,7 +150,7 @@ export default function CategoryManager() {
 
       {/* Category List */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {categories.map((cat) => (
+        {categories?.map((cat) => (
           <Card key={cat.id} className="group">
             <CardContent className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
@@ -143,10 +181,8 @@ export default function CategoryManager() {
         ))}
       </div>
 
-      {categories.length === 0 && (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-          还没有分类，添加一个吧
-        </div>
+      {categories?.length === 0 && (
+        <EmptyState title="还没有分类" description="添加一个分类来整理你的书籍" />
       )}
 
       <ConfirmModal
@@ -156,6 +192,7 @@ export default function CategoryManager() {
         title="删除分类"
         description="确定要删除这个分类吗？关联的书籍将变为未分类。"
         confirmText="删除"
+        isLoading={deleteCategory.isPending}
       />
     </div>
   )

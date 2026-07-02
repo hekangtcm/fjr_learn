@@ -1,17 +1,21 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { BookForm } from '@/components/book/BookForm'
+import { BookForm, type BookFormData } from '@/components/book/BookForm'
 import { useToast } from '@/components/ui/Toast'
-import { useBookStore } from '@/stores/useBookStore'
+import { useBook, useUpdateBook } from '@/hooks/useBooks'
+import { BookDetailSkeleton } from '@/components/ui/Skeleton'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export default function BookEdit() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { getBookById, updateBook } = useBookStore()
+  const { data: book, isLoading, isError, error, refetch } = useBook(id)
+  const updateBook = useUpdateBook()
 
-  const book = id ? getBookById(id) : undefined
+  if (isLoading) return <BookDetailSkeleton />
+  if (isError) return <ErrorState message={error?.message} onRetry={refetch} />
 
   if (!book) {
     return (
@@ -21,6 +25,21 @@ export default function BookEdit() {
           返回书架
         </Button>
       </div>
+    )
+  }
+
+  const handleSubmit = (data: BookFormData) => {
+    updateBook.mutate(
+      { id: book.id, ...data },
+      {
+        onSuccess: () => {
+          showToast('success', '书籍更新成功')
+          navigate(`/books/${book.id}`)
+        },
+        onError: () => {
+          showToast('error', '更新失败')
+        },
+      }
     )
   }
 
@@ -44,11 +63,7 @@ export default function BookEdit() {
           categoryId: book.categoryId || '',
           coverUrl: book.coverUrl || '',
         }}
-        onSubmit={(data) => {
-          updateBook(book.id, data)
-          showToast('success', '书籍更新成功')
-          navigate(`/books/${book.id}`)
-        }}
+        onSubmit={handleSubmit}
         onCancel={() => navigate(-1)}
       />
     </div>

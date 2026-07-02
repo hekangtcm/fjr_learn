@@ -5,21 +5,25 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmModal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { useBookStore } from '@/stores/useBookStore'
-import { useCategoryStore } from '@/stores/useCategoryStore'
+import { useBook, useDeleteBook } from '@/hooks/useBooks'
+import { useCategories } from '@/hooks/useCategories'
+import { BookDetailSkeleton } from '@/components/ui/Skeleton'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { getBookById, deleteBook } = useBookStore()
-  const { getCategoryById } = useCategoryStore()
+
+  const { data: book, isLoading, isError, error, refetch } = useBook(id)
+  const { data: categories } = useCategories()
+  const deleteBook = useDeleteBook()
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
 
-  const book = id ? getBookById(id) : undefined
-  const category = book?.categoryId ? getCategoryById(book.categoryId) : undefined
+  const category = book?.categoryId
+    ? categories?.find((c) => c.id === book.categoryId)
+    : undefined
 
   const statusMap = {
     OWNED: { label: '已拥有', variant: 'owned' as const },
@@ -28,6 +32,8 @@ export default function BookDetail() {
     WISHLIST: { label: '想读', variant: 'wishlist' as const },
   }
 
+  if (isLoading) return <BookDetailSkeleton />
+  if (isError) return <ErrorState message={error?.message} onRetry={refetch} />
   if (!book) {
     return (
       <div className="text-center py-12">
@@ -39,12 +45,18 @@ export default function BookDetail() {
 
   const status = statusMap[book.status]
 
-  const handleDelete = async () => {
-    setIsDeleting(true)
-    deleteBook(book.id)
-    showToast('success', '书籍已删除')
-    setShowDeleteModal(false)
-    navigate('/')
+  const handleDelete = () => {
+    deleteBook.mutate(book.id, {
+      onSuccess: () => {
+        showToast('success', '书籍已删除')
+        setShowDeleteModal(false)
+        navigate('/')
+      },
+      onError: () => {
+        showToast('error', '删除失败')
+        setShowDeleteModal(false)
+      },
+    })
   }
 
   return (
@@ -136,7 +148,7 @@ export default function BookDetail() {
         title="删除书籍"
         description={`确定要删除《${book.title}》吗？此操作无法撤销。`}
         confirmText="删除"
-        isLoading={isDeleting}
+        isLoading={deleteBook.isPending}
       />
     </div>
   )

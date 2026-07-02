@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, Grid3X3, List, BookOpen } from 'lucide-react'
+import { Search, Plus, Grid3X3, List } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useBookStore } from '@/stores/useBookStore'
-import { useCategoryStore } from '@/stores/useCategoryStore'
+import { useBooks } from '@/hooks/useBooks'
+import { useCategories } from '@/hooks/useCategories'
+import { BookListSkeleton } from '@/components/ui/Skeleton'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 import BookCard from '@/components/book/BookCard'
 import BookTable from '@/components/book/BookTable'
 import type { BookStatus } from '@/types'
@@ -20,17 +23,29 @@ const statusTabs: { value: BookStatus | 'ALL'; label: string }[] = [
 
 export default function BookList() {
   const navigate = useNavigate()
-  const { searchBooks } = useBookStore()
-  const { getCategoryById } = useCategoryStore()
-
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<BookStatus | 'ALL'>('ALL')
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
-  const allBooks = searchBooks(searchQuery)
-  const filteredBooks = activeTab === 'ALL' ? allBooks : allBooks.filter((book) => book.status === activeTab)
+  const { data, isLoading, isError, error, refetch } = useBooks({
+    page: 1,
+    pageSize: 50,
+    status: activeTab,
+    query: searchQuery,
+  })
 
-  const getCategory = (id?: string) => (id ? getCategoryById(id) : undefined)
+  const { data: categories } = useCategories()
+
+  const books = data?.items || []
+  const total = data?.total || 0
+
+  const getCategory = (id?: string) => {
+    if (!id || !categories) return undefined
+    return categories.find((cat) => cat.id === id)
+  }
+
+  if (isLoading) return <BookListSkeleton />
+  if (isError) return <ErrorState message={error?.message} onRetry={refetch} />
 
   return (
     <div className="space-y-6">
@@ -39,7 +54,7 @@ export default function BookList() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">我的书架</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            共 {filteredBooks.length} 本书
+            共 {total} 本书
           </p>
         </div>
         <Button onClick={() => navigate('/books/new')}>
@@ -66,7 +81,7 @@ export default function BookList() {
             className={cn(
               'rounded-lg p-2 transition-colors',
               viewMode === 'grid'
-                ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                 : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
             )}
             title="网格视图"
@@ -78,7 +93,7 @@ export default function BookList() {
             className={cn(
               'rounded-lg p-2 transition-colors',
               viewMode === 'table'
-                ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                 : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
             )}
             title="列表视图"
@@ -97,7 +112,7 @@ export default function BookList() {
             className={cn(
               'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
               activeTab === tab.value
-                ? 'bg-primary-600 text-white dark:bg-primary-700'
+                ? 'bg-blue-600 text-white dark:bg-blue-700'
                 : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
             )}
           >
@@ -107,23 +122,11 @@ export default function BookList() {
       </div>
 
       {/* Book List */}
-      {filteredBooks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-16 dark:border-slate-700">
-          <BookOpen className="h-12 w-12 text-slate-300 dark:text-slate-600" />
-          <p className="mt-4 text-lg font-medium text-slate-500 dark:text-slate-400">
-            还没有书籍
-          </p>
-          <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
-            点击上方按钮添加你的第一本书
-          </p>
-          <Button className="mt-4" onClick={() => navigate('/books/new')}>
-            <Plus className="h-4 w-4" />
-            添加书籍
-          </Button>
-        </div>
+      {books.length === 0 ? (
+        <EmptyState onAction={() => navigate('/books/new')} />
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredBooks.map((book) => (
+          {books.map((book) => (
             <BookCard
               key={book.id}
               book={book}
@@ -133,7 +136,7 @@ export default function BookList() {
           ))}
         </div>
       ) : (
-        <BookTable books={filteredBooks} getCategory={getCategory} />
+        <BookTable books={books} getCategory={getCategory} />
       )}
     </div>
   )

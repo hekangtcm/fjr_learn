@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { useCategoryStore } from '@/stores/useCategoryStore'
+import { useCategories } from '@/hooks/useCategories'
 import type { BookStatus } from '@/types'
 
 const bookSchema = z.object({
@@ -26,7 +26,7 @@ interface BookFormProps {
 }
 
 export function BookForm({ defaultValues, onSubmit, onCancel }: BookFormProps) {
-  const { categories } = useCategoryStore()
+  const { data: categories } = useCategories()
   const {
     register,
     handleSubmit,
@@ -92,7 +92,7 @@ export function BookForm({ defaultValues, onSubmit, onCancel }: BookFormProps) {
           </label>
           <select
             {...register('status')}
-            className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           >
             {statusOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -108,10 +108,10 @@ export function BookForm({ defaultValues, onSubmit, onCancel }: BookFormProps) {
           </label>
           <select
             {...register('categoryId')}
-            className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
           >
             <option value="">未分类</option>
-            {categories.map((cat) => (
+            {categories?.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
@@ -128,7 +128,7 @@ export function BookForm({ defaultValues, onSubmit, onCancel }: BookFormProps) {
           {...register('description')}
           rows={4}
           placeholder="请输入书籍描述..."
-          className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+          className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
         />
         {errors.description && (
           <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>

@@ -1,17 +1,23 @@
 import { BookOpen, CheckCircle, Clock, Library, Sparkles } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
-import { useBookStore } from '@/stores/useBookStore'
-import { useCategoryStore } from '@/stores/useCategoryStore'
+import { useStats } from '@/hooks/useStats'
+import { useBooks } from '@/hooks/useBooks'
+import { useCategories } from '@/hooks/useCategories'
+import { StatsSkeleton } from '@/components/ui/Skeleton'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export default function Stats() {
-  const { books } = useBookStore()
-  const { categories } = useCategoryStore()
+  const { data: statsData, isLoading: statsLoading, isError: statsError, error, refetch } = useStats()
+  const { data: booksData } = useBooks({ page: 1, pageSize: 10 })
+  const { data: categories } = useCategories()
 
-  const total = books.length
-  const owned = books.filter((b) => b.status === 'OWNED').length
-  const reading = books.filter((b) => b.status === 'READING').length
-  const finished = books.filter((b) => b.status === 'FINISHED').length
-  const wishlist = books.filter((b) => b.status === 'WISHLIST').length
+  const total = statsData?.totalBooks || 0
+  const breakdown = statsData?.statusBreakdown || {}
+  const owned = breakdown['OWNED'] || 0
+  const reading = breakdown['READING'] || 0
+  const finished = breakdown['FINISHED'] || 0
+  const wishlist = breakdown['WISHLIST'] || 0
+  const avgRating = statsData?.averageRating || 0
 
   const stats = [
     { label: '书籍总数', value: total, icon: Library, color: 'bg-blue-500' },
@@ -21,11 +27,11 @@ export default function Stats() {
     { label: '想读', value: wishlist, icon: Sparkles, color: 'bg-amber-500' },
   ]
 
-  const recentBooks = [...books]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5)
-
+  const recentBooks = statsData?.recentBooks || []
   const completionRate = total > 0 ? Math.round((finished / total) * 100) : 0
+
+  if (statsLoading) return <StatsSkeleton />
+  if (statsError) return <ErrorState message={error?.message} onRetry={refetch} />
 
   return (
     <div className="space-y-6">
@@ -61,11 +67,12 @@ export default function Stats() {
             </div>
             <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-400 transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
                 style={{ width: `${completionRate}%` }}
               />
             </div>
           </div>
+          <p className="mt-2 text-sm text-slate-500">平均评分: {avgRating.toFixed(1)} / 5</p>
         </CardContent>
       </Card>
 
@@ -75,7 +82,7 @@ export default function Stats() {
           <h3 className="font-semibold text-slate-900 dark:text-white">最近添加</h3>
           {recentBooks.length > 0 ? (
             <div className="mt-4 divide-y divide-slate-200 dark:divide-slate-700">
-              {recentBooks.map((book) => (
+              {recentBooks.map((book: any) => (
                 <div key={book.id} className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium text-slate-900 dark:text-white">{book.title}</p>
@@ -97,10 +104,10 @@ export default function Stats() {
       <Card>
         <CardContent className="p-6">
           <h3 className="font-semibold text-slate-900 dark:text-white">分类分布</h3>
-          {categories.length > 0 ? (
+          {categories && categories.length > 0 ? (
             <div className="mt-4 flex flex-wrap gap-3">
               {categories.map((cat) => {
-                const count = books.filter((b) => b.categoryId === cat.id).length
+                const count = booksData?.items?.filter((b) => b.categoryId === cat.id).length || 0
                 return (
                   <div
                     key={cat.id}
