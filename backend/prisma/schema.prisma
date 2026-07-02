@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite doesn't support enums, use String with defaults
+// BookStatus: OWNED | READING | FINISHED | WISHLIST
+// UserRole: USER | ADMIN
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  name         String
+  role         String   @default("USER")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  books     Book[]
+  categories Category[]
+  reviews   Review[]
+
+  @@map("users")
+}
+
+model Book {
+  id            String     @id @default(uuid())
+  title         String
+  author        String
+  isbn          String?
+  publishedDate DateTime?  @map("published_date")
+  pageCount     Int?       @map("page_count")
+  description   String?
+  coverUrl      String?    @map("cover_url")
+  status        String   @default("WISHLIST")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  reviews    Review[]
+
+  @@map("books")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  color     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  books  Book[]
+
+  @@unique([userId, name])
+  @@map("categories")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  text      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  bookId String @map("book_id")
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
