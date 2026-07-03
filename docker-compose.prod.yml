@@ -11,7 +11,7 @@ services:
     networks:
       - booknest-internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-booknest} -d ${DB_NAME:-booknest}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-booknest}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,8 +29,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    ports:
-      - "4000:4000"
     networks:
       - booknest-internal
       - booknest-proxy
@@ -42,8 +40,6 @@ services:
       args:
         VITE_API_URL: /api/v1
     restart: always
-    ports:
-      - "8080:80"
     networks:
       - booknest-proxy
 
