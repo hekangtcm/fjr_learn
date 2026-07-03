@@ -1,0 +1,78 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  e2e:
+    runs-on: [self-hosted, linux, x64]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: booknest_e2e
+        ports:
+          - 55433:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d booknest_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            booknest/frontend/package-lock.json
+            booknest/backend/package-lock.json
+
+      - name: Setup Backend (E2E)
+        run: |
+          cd backend
+          npm ci
+          sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run prisma:seed
+          npm run dev &
+          sleep 5
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:55433/booknest_e2e
+          JWT_SECRET: e2e-secret
+          PORT: 4010
+          NODE_ENV: test
+
+      - name: Setup Frontend (E2E)
+        run: |
+          cd frontend
+          npm ci
+          VITE_API_URL=http://localhost:4010/api/v1 npm run dev &
+          sleep 5
+
+      - name: Wait for services
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:4010/health && curl -f http://localhost:4001; then
+              echo "Services ready"
+              break
+            fi
+            echo "Waiting... $i"
+            sleep 2
+          done
+
+      - name: Run E2E Tests
+        run: |
+          echo "E2E tests placeholder - install Playwright to run real tests"
+          # cd booknest/e2e
+          # npx playwright test

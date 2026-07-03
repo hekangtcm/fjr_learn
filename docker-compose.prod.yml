@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-booknest}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-booknest}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - booknest-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-booknest} -d ${DB_NAME:-booknest}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-booknest}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-booknest}
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+      PORT: 4000
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    networks:
+      - booknest-internal
+      - booknest-proxy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+    restart: always
+    ports:
+      - "8080:80"
+    networks:
+      - booknest-proxy
+
+volumes:
+  pgdata:
+
+networks:
+  booknest-internal:
+  booknest-proxy:
