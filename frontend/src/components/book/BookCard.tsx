@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -10,7 +11,7 @@ interface BookCardProps {
   onClick?: () => void
 }
 
-export default function BookCard({ book, category, onClick }: BookCardProps) {
+const BookCard = memo(function BookCard({ book, category, onClick }: BookCardProps) {
   const statusMap = {
     OWNED: { label: '已拥有', variant: 'owned' as const },
     READING: { label: '在读', variant: 'reading' as const },
@@ -74,4 +75,6 @@ export default function BookCard({ book, category, onClick }: BookCardProps) {
       </CardContent>
     </Card>
   )
-}
+})
+
+export default BookCard

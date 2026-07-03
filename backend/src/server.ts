@@ -5,6 +5,10 @@ import { errorHandler } from './middleware/errorHandler'
 import { apiLimiter } from './middleware/rateLimit'
 import { serveUploads } from './controllers/upload.controller'
 import routes from './routes'
+import healthRoutes from './routes/health.routes'
+
+import logger from './lib/logger'
+import { requestLogger } from './lib/requestLogger'
 
 const app = express()
 
@@ -31,7 +35,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
-      console.warn(`CORS blocked: ${origin}`)
+      logger.warn(`CORS blocked`, { origin })
       callback(new Error('Not allowed by CORS'))
     }
   },
@@ -42,10 +46,11 @@ app.use(cors({
 
 app.use(express.json())
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
+// HTTP request logging
+app.use(requestLogger)
+
+// Health check routes (before rate limiting)
+app.use(healthRoutes)
 
 // 静态文件服务（上传的封面图片）
 app.get('/uploads/:filename', serveUploads)

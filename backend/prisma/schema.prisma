@@ -46,6 +46,9 @@ model Book {
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   reviews    Review[]
 
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@index([userId, categoryId])
   @@map("books")
 }
 

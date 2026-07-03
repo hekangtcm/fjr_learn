@@ -1,6 +1,7 @@
 import { Server as SocketServer } from 'socket.io'
 import type { Server } from 'http'
 import jwt from 'jsonwebtoken'
+import logger from './logger'
 
 let io: SocketServer
 
@@ -38,13 +39,13 @@ export function initSocket(server: Server) {
   })
 
   io.on('connection', (socket) => {
-    console.log(`Socket connected: user ${socket.data.userId}`)
+    logger.info('Socket connected', { userId: socket.data.userId })
 
     // 加入用户专属房间
     socket.join(`user:${socket.data.userId}`)
 
     socket.on('disconnect', () => {
-      console.log(`Socket disconnected: user ${socket.data.userId}`)
+      logger.info('Socket disconnected', { userId: socket.data.userId })
     })
   })
 
@@ -60,6 +61,6 @@ export function notifyUser(userId: string, event: string, data: unknown) {
   try {
     getIO().to(`user:${userId}`).emit(event, data)
   } catch (err) {
-    console.error('Socket notify error:', (err as Error).message)
+    logger.error('Socket notify error', { error: (err as Error).message, userId, event })
   }
 }

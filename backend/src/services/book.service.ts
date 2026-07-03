@@ -2,6 +2,7 @@ import prisma from '../lib/prisma'
 import { ApiError } from '../utils/errors'
 import { cache } from '../lib/cache'
 import { notifyUser } from '../lib/socket'
+import logger from '../lib/logger'
 
 export class BookService {
   async list(userId: string, options: {
@@ -25,6 +26,7 @@ export class BookService {
     return cache.getOrSet(
       cacheKey,
       async () => {
+        const start = Date.now()
         const [items, total] = await Promise.all([
           prisma.book.findMany({
             where,
@@ -35,6 +37,7 @@ export class BookService {
           }),
           prisma.book.count({ where }),
         ])
+        logger.debug('Book list query', { userId, page, pageSize, count: items.length, duration: `${Date.now() - start}ms` })
         return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
       },
       120 // 2 分钟 TTL
@@ -68,6 +71,8 @@ export class BookService {
 
     await this.invalidateCache(userId)
 
+    logger.info('Book created', { bookId: book.id, userId, title: book.title })
+
     notifyUser(userId, 'book:created', {
       message: `《${book.title}》已添加到书架`,
       book,
@@ -88,6 +93,8 @@ export class BookService {
     })
 
     await this.invalidateCache(userId, bookId)
+
+    logger.info('Book updated', { bookId, userId, title: updated.title })
 
     const statusLabels: Record<string, string> = {
       OWNED: '已拥有', READING: '在读', FINISHED: '已读完', WISHLIST: '想读',
@@ -110,6 +117,8 @@ export class BookService {
     await prisma.book.delete({ where: { id: bookId } })
 
     await this.invalidateCache(userId, bookId)
+
+    logger.info('Book deleted', { bookId, userId, title: book.title })
 
     notifyUser(userId, 'book:deleted', {
       message: `《${book.title}》已从书架删除`,
