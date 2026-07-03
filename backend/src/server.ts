@@ -2,34 +2,32 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import { errorHandler } from './middleware/errorHandler'
+import { apiLimiter } from './middleware/rateLimit'
+import { serveUploads } from './controllers/upload.controller'
 import routes from './routes'
 
 const app = express()
 
 const isProduction = process.env.NODE_ENV === 'production'
 
-// Security: Helmet — 安全响应头
+// Security: Helmet
 app.use(helmet({
-  contentSecurityPolicy: isProduction ? undefined : false, // 开发环境禁用 CSP（防止影响调试）
+  contentSecurityPolicy: isProduction ? undefined : false,
   crossOriginEmbedderPolicy: false,
   hsts: isProduction ? {
-    maxAge: 31536000, // 1 年
+    maxAge: 31536000,
     includeSubDomains: true,
     preload: true,
-  } : false, // 开发环境禁用 HSTS
+  } : false,
 }))
 
-// Security: CORS — 只允许指定域名
+// Security: CORS
 const allowedOrigins = isProduction
-  ? [
-      process.env.FRONTEND_URL,      // 如 https://yourdomain.com
-      'https://www.yourdomain.com',
-    ].filter(Boolean)
+  ? [process.env.FRONTEND_URL, 'https://www.yourdomain.com'].filter(Boolean)
   : ['http://localhost:4001', 'http://localhost:5173']
 
 app.use(cors({
   origin: (origin, callback) => {
-    // 允许无来源的请求（如 curl 调用）或白名单内的请求
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
@@ -44,9 +42,16 @@ app.use(cors({
 
 app.use(express.json())
 
+// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+
+// 静态文件服务（上传的封面图片）
+app.get('/uploads/:filename', serveUploads)
+
+// Rate limiting
+app.use('/api/v1', apiLimiter)
 
 app.use('/api/v1', routes)
 app.use(errorHandler)

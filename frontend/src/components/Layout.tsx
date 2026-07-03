@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { BookOpen, LayoutGrid, Tag, BarChart3, Settings, LogOut, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { NotificationToast } from '@/components/ui/NotificationToast'
 
 const navItems = [
   { path: '/', label: '书籍', icon: BookOpen },
@@ -65,6 +66,7 @@ export default function Layout() {
       <footer className="border-t border-slate-200 bg-white py-4 text-center text-sm text-slate-500">
         BookNest — 个人藏书管理
       </footer>
+      <NotificationToast />
     </div>
   )
 }

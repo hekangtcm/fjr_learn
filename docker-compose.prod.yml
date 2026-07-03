@@ -1,4 +1,13 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    networks:
+      - booknest-internal
+
   postgres:
     image: postgres:16-alpine
     restart: always
@@ -24,6 +33,8 @@ services:
     environment:
       DATABASE_URL: postgresql://${DB_USER:-booknest}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-booknest}
       JWT_SECRET: ${JWT_SECRET:-change-me}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       PORT: 4000
       NODE_ENV: production
     depends_on:
@@ -45,6 +56,7 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
 
 networks:
   booknest-internal:

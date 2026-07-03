@@ -1,8 +1,11 @@
 import { Router } from 'express'
 import { body } from 'express-validator'
 import { bookController } from '../controllers/book.controller'
+import { uploadCover } from '../controllers/upload.controller'
 import { authenticate } from '../middleware/auth'
 import { validate } from '../middleware/validate'
+import { upload } from '../middleware/upload'
+import { uploadLimiter } from '../middleware/rateLimit'
 
 const router = Router()
 
@@ -19,5 +22,14 @@ router.get('/:id', authenticate, bookController.getById)
 router.post('/', authenticate, createRules, validate, bookController.create)
 router.put('/:id', authenticate, createRules, validate, bookController.update)
 router.delete('/:id', authenticate, bookController.delete)
+
+// 封面上传
+router.post(
+  '/:id/cover',
+  authenticate,
+  uploadLimiter,
+  upload.single('cover'),
+  uploadCover
+)
 
 export default router
