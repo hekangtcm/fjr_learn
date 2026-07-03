@@ -47,7 +47,7 @@ jobs:
           # Switch to PostgreSQL for CI tests
           sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
           npx prisma generate
-          npx prisma migrate deploy
+          npx prisma db push --accept-data-loss
           npm run prisma:seed
           npm test -- --runInBand
         env:
@@ -90,13 +90,11 @@ jobs:
           git reset --hard origin/main
           git clean -fd
 
-          cat > .env <<'ENVEOF'
-          DB_USER=booknest
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_NAME=booknest
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          DOMAIN=139.224.246.39
-          ENVEOF
+          echo "DB_USER=booknest" > .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_NAME=booknest" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "DOMAIN=139.224.246.39" >> .env
 
           docker compose -f docker-compose.prod.yml down
           docker compose -f docker-compose.prod.yml up -d --build

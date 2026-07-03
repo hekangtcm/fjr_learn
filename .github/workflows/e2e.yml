@@ -34,8 +34,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: |
-            booknest/frontend/package-lock.json
-            booknest/backend/package-lock.json
+            frontend/package-lock.json
+            backend/package-lock.json
 
       - name: Setup Backend (E2E)
         run: |
@@ -43,7 +43,7 @@ jobs:
           npm ci
           sed -i 's/provider = "sqlite"/provider = "postgresql"/' prisma/schema.prisma
           npx prisma generate
-          npx prisma migrate deploy
+          npx prisma db push --accept-data-loss
           npm run prisma:seed
           npm run dev &
           sleep 5
