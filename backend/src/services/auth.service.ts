@@ -11,8 +11,26 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
-    const user = await prisma.user.create({
-      data: { email, passwordHash, name },
+
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: { email, passwordHash, name },
+      })
+
+      await tx.workspace.create({
+        data: {
+          name: `${name} 的个人书架`,
+          description: '默认 Workspace',
+          members: {
+            create: {
+              userId: createdUser.id,
+              role: 'OWNER',
+            },
+          },
+        },
+      })
+
+      return createdUser
     })
 
     return { id: user.id, email: user.email, name: user.name, role: user.role }

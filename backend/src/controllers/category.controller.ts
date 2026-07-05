@@ -4,22 +4,22 @@ import { ResponseUtil } from '../utils/response'
 
 export class CategoryController {
   async list(req: Request, res: Response) {
-    const categories = await categoryService.list(req.user!.id)
+    const categories = await categoryService.list(req.workspace!.id)
     ResponseUtil.success(res, categories)
   }
 
   async create(req: Request, res: Response) {
-    const category = await categoryService.create(req.user!.id, req.body)
+    const category = await categoryService.create(req.user!.id, req.workspace!.id, req.workspace!.role, req.body)
     ResponseUtil.success(res, category, 'Category created', 201)
   }
 
   async update(req: Request, res: Response) {
-    const category = await categoryService.update(req.user!.id, req.params.id as string, req.body)
+    const category = await categoryService.update(req.user!.id, req.workspace!.id, req.workspace!.role, req.params.id as string, req.body)
     ResponseUtil.success(res, category)
   }
 
   async delete(req: Request, res: Response) {
-    const result = await categoryService.delete(req.user!.id, req.params.id as string)
+    const result = await categoryService.delete(req.user!.id, req.workspace!.id, req.workspace!.role, req.params.id as string)
     ResponseUtil.success(res, result)
   }
 }

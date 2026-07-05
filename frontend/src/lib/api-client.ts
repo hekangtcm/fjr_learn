@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useWorkspaceStore } from '@/stores/useWorkspaceStore'
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1',
@@ -6,11 +7,16 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// 请求拦截器: 注入 JWT token
+// 请求拦截器: 注入 JWT token 和当前 Workspace ID
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  // 从 Zustand store 获取当前 workspace id（仅在非 SSR 环境）
+  const workspace = useWorkspaceStore.getState().currentWorkspace
+  if (workspace) {
+    config.headers['X-Workspace-Id'] = workspace.id
   }
   return config
 })

@@ -5,7 +5,8 @@ import { ResponseUtil } from '../utils/response'
 export class BookController {
   async list(req: Request, res: Response) {
     const query = (req as any).validatedQuery || req.query
-    const result = await bookService.list(req.user!.id, {
+    const workspaceId = req.workspace!.id
+    const result = await bookService.list(workspaceId, {
       page: Number(query.page) || 1,
       pageSize: Number(query.pageSize) || 10,
       status: query.status as any,
@@ -17,22 +18,22 @@ export class BookController {
   }
 
   async getById(req: Request, res: Response) {
-    const book = await bookService.getById(req.user!.id, req.params.id as string)
+    const book = await bookService.getById(req.workspace!.id, req.params.id as string)
     ResponseUtil.success(res, book)
   }
 
   async create(req: Request, res: Response) {
-    const book = await bookService.create(req.user!.id, req.body)
+    const book = await bookService.create(req.user!.id, req.workspace!.id, req.body)
     ResponseUtil.success(res, book, 'Book created', 201)
   }
 
   async update(req: Request, res: Response) {
-    const book = await bookService.update(req.user!.id, req.params.id as string, req.body)
+    const book = await bookService.update(req.user!.id, req.workspace!.id, req.workspace!.role, req.params.id as string, req.body)
     ResponseUtil.success(res, book)
   }
 
   async delete(req: Request, res: Response) {
-    const result = await bookService.delete(req.user!.id, req.params.id as string)
+    const result = await bookService.delete(req.user!.id, req.workspace!.id, req.workspace!.role, req.params.id as string)
     ResponseUtil.success(res, result)
   }
 }

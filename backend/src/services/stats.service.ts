@@ -3,25 +3,25 @@ import { cache } from '../lib/cache'
 import { notifyUser } from '../lib/socket'
 
 export class StatsService {
-  async getStats(userId: string) {
-    const cacheKey = `stats:${userId}`
+  async getStats(workspaceId: string) {
+    const cacheKey = `stats:${workspaceId}`
 
     return cache.getOrSet(
       cacheKey,
       async () => {
         const [totalBooks, statusBreakdown, averageRating, recentBooks] = await Promise.all([
-          prisma.book.count({ where: { userId } }),
+          prisma.book.count({ where: { workspaceId } }),
           prisma.book.groupBy({
             by: ['status'],
-            where: { userId },
+            where: { workspaceId },
             _count: { status: true },
           }),
           prisma.review.aggregate({
-            where: { user: { id: userId } },
+            where: { book: { workspaceId } },
             _avg: { rating: true },
           }),
           prisma.book.findMany({
-            where: { userId },
+            where: { workspaceId },
             orderBy: { createdAt: 'desc' },
             take: 5,
             include: { category: true },

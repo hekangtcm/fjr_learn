@@ -3,13 +3,15 @@ import { ApiError } from '../utils/errors'
 import { cache } from '../lib/cache'
 import { notifyUser } from '../lib/socket'
 import logger from '../lib/logger'
+import { writeAuditLog } from './audit.service'
 
 export class BookService {
-  async list(userId: string, options: {
+  async list(workspaceId: string, options: {
     page?: number
     pageSize?: number
     status?: string
     categoryId?: string
+    search?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
   }) {
@@ -17,11 +19,11 @@ export class BookService {
     const pageSize = Math.min(100, Math.max(1, options.pageSize || 10))
     const skip = (page - 1) * pageSize
 
-    const where: any = { userId }
+    const where: any = { workspaceId }
     if (options.status) where.status = options.status
     if (options.categoryId) where.categoryId = options.categoryId
 
-    const cacheKey = `books:${userId}:list:${JSON.stringify({ page, pageSize, ...options })}`
+    const cacheKey = `books:${workspaceId}:list:${JSON.stringify({ page, pageSize, ...options })}`
 
     return cache.getOrSet(
       cacheKey,
@@ -37,41 +39,50 @@ export class BookService {
           }),
           prisma.book.count({ where }),
         ])
-        logger.debug('Book list query', { userId, page, pageSize, count: items.length, duration: `${Date.now() - start}ms` })
+        logger.debug('Book list query', { workspaceId, page, pageSize, count: items.length, duration: `${Date.now() - start}ms` })
         return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
       },
-      120 // 2 分钟 TTL
+      120
     )
   }
 
-  async getById(userId: string, bookId: string) {
-    const cacheKey = `books:${userId}:detail:${bookId}`
+  async getById(workspaceId: string, bookId: string) {
+    const cacheKey = `books:${workspaceId}:detail:${bookId}`
 
     return cache.getOrSet(
       cacheKey,
       async () => {
-        const book = await prisma.book.findUnique({
-          where: { id: bookId },
+        const book = await prisma.book.findFirst({
+          where: { id: bookId, workspaceId },
           include: { category: true, reviews: { include: { user: { select: { id: true, name: true } } } } },
         })
-        if (!book || book.userId !== userId) {
+        if (!book) {
           throw new ApiError(404, 'Book not found')
         }
         return book
       },
-      300 // 5 分钟 TTL
+      300
     )
   }
 
-  async create(userId: string, data: any) {
+  async create(userId: string, workspaceId: string, data: any) {
     const book = await prisma.book.create({
-      data: { ...data, userId },
+      data: { ...data, userId, workspaceId },
       include: { category: true },
     })
 
-    await this.invalidateCache(userId)
+    await this.invalidateCache(workspaceId)
 
-    logger.info('Book created', { bookId: book.id, userId, title: book.title })
+    logger.info('Book created', { bookId: book.id, userId, workspaceId, title: book.title })
+
+    await writeAuditLog({
+      workspaceId,
+      actorId: userId,
+      action: 'book.created',
+      entityType: 'Book',
+      entityId: book.id,
+      metadata: { title: book.title },
+    })
 
     notifyUser(userId, 'book:created', {
       message: `《${book.title}》已添加到书架`,
@@ -81,20 +92,35 @@ export class BookService {
     return book
   }
 
-  async update(userId: string, bookId: string, data: any) {
-    const book = await prisma.book.findUnique({ where: { id: bookId } })
-    if (!book || book.userId !== userId) {
-      throw new ApiError(403, 'You can only update your own books')
+  async update(userId: string, workspaceId: string, role: string, bookId: string, data: any) {
+    const book = await prisma.book.findFirst({ where: { id: bookId, workspaceId } })
+    if (!book) {
+      throw new ApiError(404, 'Book not found')
     }
+
+    const canEdit = ['OWNER', 'ADMIN'].includes(role) || (role === 'MEMBER' && book.userId === userId)
+    if (!canEdit) {
+      throw new ApiError(403, '无权编辑该书籍')
+    }
+
     const updated = await prisma.book.update({
       where: { id: bookId },
       data,
       include: { category: true },
     })
 
-    await this.invalidateCache(userId, bookId)
+    await this.invalidateCache(workspaceId, bookId)
 
-    logger.info('Book updated', { bookId, userId, title: updated.title })
+    logger.info('Book updated', { bookId, userId, workspaceId, title: updated.title })
+
+    await writeAuditLog({
+      workspaceId,
+      actorId: userId,
+      action: 'book.updated',
+      entityType: 'Book',
+      entityId: book.id,
+      metadata: { title: updated.title },
+    })
 
     const statusLabels: Record<string, string> = {
       OWNED: '已拥有', READING: '在读', FINISHED: '已读完', WISHLIST: '想读',
@@ -109,16 +135,31 @@ export class BookService {
     return updated
   }
 
-  async delete(userId: string, bookId: string) {
-    const book = await prisma.book.findUnique({ where: { id: bookId } })
-    if (!book || book.userId !== userId) {
-      throw new ApiError(403, 'You can only delete your own books')
+  async delete(userId: string, workspaceId: string, role: string, bookId: string) {
+    const book = await prisma.book.findFirst({ where: { id: bookId, workspaceId } })
+    if (!book) {
+      throw new ApiError(404, 'Book not found')
     }
+
+    const canDelete = ['OWNER', 'ADMIN'].includes(role) || (role === 'MEMBER' && book.userId === userId)
+    if (!canDelete) {
+      throw new ApiError(403, '无权删除该书籍')
+    }
+
     await prisma.book.delete({ where: { id: bookId } })
 
-    await this.invalidateCache(userId, bookId)
+    await this.invalidateCache(workspaceId, bookId)
 
-    logger.info('Book deleted', { bookId, userId, title: book.title })
+    logger.info('Book deleted', { bookId, userId, workspaceId, title: book.title })
+
+    await writeAuditLog({
+      workspaceId,
+      actorId: userId,
+      action: 'book.deleted',
+      entityType: 'Book',
+      entityId: bookId,
+      metadata: { title: book.title },
+    })
 
     notifyUser(userId, 'book:deleted', {
       message: `《${book.title}》已从书架删除`,
@@ -128,11 +169,11 @@ export class BookService {
     return { id: bookId }
   }
 
-  private async invalidateCache(userId: string, bookId?: string) {
-    await cache.del(`stats:${userId}`)
-    await cache.del(`books:${userId}:*`)
+  private async invalidateCache(workspaceId: string, bookId?: string) {
+    await cache.del(`stats:${workspaceId}`)
+    await cache.del(`books:${workspaceId}:*`)
     if (bookId) {
-      await cache.del(`books:${userId}:detail:${bookId}`)
+      await cache.del(`books:${workspaceId}:detail:${bookId}`)
     }
   }
 }

@@ -5,6 +5,7 @@ import { authenticate } from '../middleware/auth'
 import { validateBody, validateQuery } from '../middleware/zodValidate'
 import { upload } from '../middleware/upload'
 import { uploadLimiter } from '../middleware/rateLimit'
+import { resolveWorkspace } from '../middleware/workspace'
 import {
   createBookBodySchema,
   updateBookBodySchema,
@@ -13,16 +14,17 @@ import {
 
 const router = Router()
 
-router.get('/', authenticate, validateQuery(listBooksQuerySchema), bookController.list)
-router.get('/:id', authenticate, bookController.getById)
-router.post('/', authenticate, validateBody(createBookBodySchema), bookController.create)
-router.put('/:id', authenticate, validateBody(updateBookBodySchema), bookController.update)
-router.delete('/:id', authenticate, bookController.delete)
+router.use(authenticate, resolveWorkspace)
+
+router.get('/', validateQuery(listBooksQuerySchema), bookController.list)
+router.get('/:id', bookController.getById)
+router.post('/', validateBody(createBookBodySchema), bookController.create)
+router.put('/:id', validateBody(updateBookBodySchema), bookController.update)
+router.delete('/:id', bookController.delete)
 
 // 封面上传
 router.post(
   '/:id/cover',
-  authenticate,
   uploadLimiter,
   upload.single('cover'),
   uploadCover

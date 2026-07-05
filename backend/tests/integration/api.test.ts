@@ -5,6 +5,7 @@ import { getPrisma, disconnectPrisma } from '../setup'
 
 let token: string
 let userId: string
+let workspaceId: string
 
 describe('Auth Integration', () => {
   beforeAll(async () => {
@@ -12,6 +13,9 @@ describe('Auth Integration', () => {
     await prisma.review.deleteMany()
     await prisma.book.deleteMany()
     await prisma.category.deleteMany()
+    await prisma.invitation.deleteMany()
+    await prisma.workspaceMember.deleteMany()
+    await prisma.workspace.deleteMany()
     await prisma.user.deleteMany()
   })
 
@@ -19,7 +23,7 @@ describe('Auth Integration', () => {
     await disconnectPrisma()
   })
 
-  it('POST /auth/register - should create a new user', async () => {
+  it('POST /auth/register - should create a new user and default workspace', async () => {
     const res = await request(app)
       .post('/api/v1/auth/register')
       .send({ email: 'test@example.com', password: 'password123', name: 'Test User' })
@@ -74,15 +78,34 @@ describe('Auth Integration', () => {
 describe('Books Integration', () => {
   let bookId: string
 
+  it('GET /workspaces - should return user workspaces', async () => {
+    const res = await request(app)
+      .get('/api/v1/workspaces')
+      .set('Authorization', `Bearer ${token}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body.data.length).toBeGreaterThan(0)
+    workspaceId = res.body.data[0].id
+  })
+
   it('GET /books - should reject without token', async () => {
     const res = await request(app).get('/api/v1/books')
     expect(res.status).toBe(401)
   })
 
-  it('GET /books - should return paginated books with token', async () => {
+  it('GET /books - should reject without workspace header', async () => {
     const res = await request(app)
       .get('/api/v1/books')
       .set('Authorization', `Bearer ${token}`)
+
+    expect(res.status).toBe(400)
+  })
+
+  it('GET /books - should return paginated books with token and workspace', async () => {
+    const res = await request(app)
+      .get('/api/v1/books')
+      .set('Authorization', `Bearer ${token}`)
+      .set('X-Workspace-Id', workspaceId)
 
     expect(res.status).toBe(200)
     expect(res.body.data.items).toBeDefined()
@@ -94,6 +117,7 @@ describe('Books Integration', () => {
     const res = await request(app)
       .post('/api/v1/books')
       .set('Authorization', `Bearer ${token}`)
+      .set('X-Workspace-Id', workspaceId)
       .send({ title: 'Clean Code', author: 'Robert C. Martin', status: 'READING', pageCount: 464 })
 
     expect(res.status).toBe(201)
@@ -105,6 +129,7 @@ describe('Books Integration', () => {
     const res = await request(app)
       .get(`/api/v1/books/${bookId}`)
       .set('Authorization', `Bearer ${token}`)
+      .set('X-Workspace-Id', workspaceId)
 
     expect(res.status).toBe(200)
     expect(res.body.data.title).toBe('Clean Code')
@@ -114,6 +139,7 @@ describe('Books Integration', () => {
     const res = await request(app)
       .put(`/api/v1/books/${bookId}`)
       .set('Authorization', `Bearer ${token}`)
+      .set('X-Workspace-Id', workspaceId)
       .send({ title: 'Clean Code Updated', author: 'Robert C. Martin' })
 
     expect(res.status).toBe(200)
@@ -124,6 +150,7 @@ describe('Books Integration', () => {
     const res = await request(app)
       .delete(`/api/v1/books/${bookId}`)
       .set('Authorization', `Bearer ${token}`)
+      .set('X-Workspace-Id', workspaceId)
 
     expect(res.status).toBe(200)
   })

@@ -2,9 +2,9 @@ import prisma from '../lib/prisma'
 import { ApiError } from '../utils/errors'
 
 export class ReviewService {
-  async listByBook(userId: string, bookId: string) {
-    const book = await prisma.book.findUnique({ where: { id: bookId } })
-    if (!book || book.userId !== userId) {
+  async listByBook(workspaceId: string, bookId: string) {
+    const book = await prisma.book.findFirst({ where: { id: bookId, workspaceId } })
+    if (!book) {
       throw new ApiError(404, 'Book not found')
     }
     return prisma.review.findMany({
@@ -14,9 +14,9 @@ export class ReviewService {
     })
   }
 
-  async create(userId: string, bookId: string, data: { rating: number; text?: string }) {
-    const book = await prisma.book.findUnique({ where: { id: bookId } })
-    if (!book || book.userId !== userId) {
+  async create(workspaceId: string, userId: string, bookId: string, data: { rating: number; text?: string }) {
+    const book = await prisma.book.findFirst({ where: { id: bookId, workspaceId } })
+    if (!book) {
       throw new ApiError(404, 'Book not found')
     }
     return prisma.review.create({

@@ -9,3 +9,11 @@ export async function apiLogin(request: APIRequestContext, email: string, passwo
   const body = await res.json()
   return body.data.token as string
 }
+
+export async function apiGetWorkspaceId(request: APIRequestContext, token: string) {
+  const res = await request.get(`${API_BASE}/workspaces`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const body = await res.json()
+  return body.data[0].id as string
+}

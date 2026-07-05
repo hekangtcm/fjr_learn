@@ -17,12 +17,19 @@ export async function uploadCover(req: Request, res: Response, next: NextFunctio
       return res.status(400).json({ code: 400, message: '请选择文件' })
     }
 
-    const userId = (req as any).user?.id
+    const userId = req.user!.id
+    const workspaceId = req.workspace!.id
+    const role = req.workspace!.role
     const bookId = req.params.id as string
 
-    const book = await prisma.book.findFirst({ where: { id: bookId, userId } })
+    const book = await prisma.book.findFirst({ where: { id: bookId, workspaceId } })
     if (!book) {
       throw new ApiError(404, '书籍不存在')
+    }
+
+    const canEdit = ['OWNER', 'ADMIN'].includes(role) || (role === 'MEMBER' && book.userId === userId)
+    if (!canEdit) {
+      throw new ApiError(403, '无权编辑该书籍')
     }
 
     // 保存到本地 uploads 目录
@@ -39,8 +46,8 @@ export async function uploadCover(req: Request, res: Response, next: NextFunctio
     })
 
     // 清除缓存
-    await cache.del(`stats:${userId}`)
-    await cache.del(`books:${userId}:*`)
+    await cache.del(`stats:${workspaceId}`)
+    await cache.del(`books:${workspaceId}:*`)
 
     notifyUser(userId, 'book:coverUpdated', {
       message: `《${updated.title}》封面已更新`,
