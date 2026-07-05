@@ -13,6 +13,7 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "prisma:seed": "ts-node --transpile-only prisma/seed.ts",
+    "prisma:seed:e2e": "tsx prisma/seed-e2e.ts",
     "prisma:studio": "npx prisma studio"
   },
   "keywords": [],

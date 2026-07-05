@@ -57,7 +57,7 @@ export default function BookList() {
             共 {total} 本书
           </p>
         </div>
-        <Button onClick={() => navigate('/books/new')}>
+        <Button data-testid="create-book-link" onClick={() => navigate('/books/new')}>
           <Plus className="h-4 w-4" />
           添加书籍
         </Button>
@@ -68,6 +68,7 @@ export default function BookList() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
+            data-testid="book-search"
             placeholder="搜索书名或作者..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -125,7 +126,7 @@ export default function BookList() {
       {books.length === 0 ? (
         <EmptyState onAction={() => navigate('/books/new')} />
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div data-testid="book-list" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {books.map((book) => (
             <BookCard
               key={book.id}

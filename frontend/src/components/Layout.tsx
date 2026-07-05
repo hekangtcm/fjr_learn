@@ -49,6 +49,7 @@ export default function Layout() {
               <span>{user?.name || '用户'}</span>
             </div>
             <button
+              data-testid="logout-button"
               onClick={logout}
               className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-slate-500 hover:bg-slate-100 hover:text-red-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-red-400"
               title="登出"

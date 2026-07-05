@@ -42,6 +42,7 @@ export default function Login() {
           <div>
             <label className="block text-sm font-medium text-slate-700">邮箱</label>
             <Input
+              data-testid="login-email"
               type="email"
               required
               value={email}
@@ -53,6 +54,7 @@ export default function Login() {
           <div>
             <label className="block text-sm font-medium text-slate-700">密码</label>
             <Input
+              data-testid="login-password"
               type="password"
               required
               value={password}
@@ -61,7 +63,7 @@ export default function Login() {
               className="mt-1"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button data-testid="login-submit" type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

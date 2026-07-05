@@ -12,6 +12,10 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
     "api:types": "openapi-typescript http://localhost:4000/openapi.json -o src/types/api.generated.ts",
     "api:types:local": "openapi-typescript ../backend/generated/openapi.json -o src/types/api.generated.ts",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:debug": "playwright test --debug",
+    "e2e:report": "playwright show-report",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -31,6 +35,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tanstack/react-query-devtools": "^5.101.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
