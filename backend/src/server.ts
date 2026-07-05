@@ -1,3 +1,5 @@
+import swaggerUi from 'swagger-ui-express'
+import { generateOpenApiDocument } from './lib/openapi'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -28,7 +30,7 @@ app.use(helmet({
 // Security: CORS
 const allowedOrigins = isProduction
   ? [process.env.FRONTEND_URL, 'https://www.yourdomain.com'].filter(Boolean)
-  : ['http://localhost:4001', 'http://localhost:5173']
+  : ['http://localhost:4001', 'http://127.0.0.1:4001', 'http://localhost:5173']
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -51,6 +53,15 @@ app.use(requestLogger)
 
 // Health check routes (before rate limiting)
 app.use(healthRoutes)
+
+// OpenAPI JSON endpoint
+const openApiDocument = generateOpenApiDocument()
+app.get('/openapi.json', (_req, res) => {
+  res.json(openApiDocument)
+})
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument))
 
 // 静态文件服务（上传的封面图片）
 app.get('/uploads/:filename', serveUploads)

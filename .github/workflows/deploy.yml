@@ -48,6 +48,8 @@ jobs:
           npx prisma generate
           npx prisma db push --accept-data-loss
           npm run prisma:seed
+          npm run lint
+          npm run openapi:generate
           npm test
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/booknest_test
@@ -59,6 +61,8 @@ jobs:
         run: |
           cd frontend
           npm ci
+          npm run lint
+          npm run api:types:local
           npm run build
           npx vitest run --passWithNoTests
         env:
