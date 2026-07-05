@@ -14,7 +14,9 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "prisma:seed": "ts-node --transpile-only prisma/seed.ts",
     "prisma:seed:e2e": "tsx prisma/seed-e2e.ts",
-    "prisma:studio": "npx prisma studio"
+    "prisma:studio": "npx prisma studio",
+    "worker:dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/workers/index.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker:dev\""
   },
   "keywords": [],
   "author": "",
@@ -25,7 +27,10 @@
     "@prisma/client": "^5.22.0",
     "ali-oss": "^6.23.0",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.79.2",
+    "concurrently": "^10.0.3",
     "cors": "^2.8.6",
+    "csv-parse": "^7.0.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",

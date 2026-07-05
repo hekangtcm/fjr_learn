@@ -11,6 +11,8 @@ const BookEdit = lazy(() => import('@/pages/BookEdit'))
 const CategoryManager = lazy(() => import('@/pages/CategoryManager'))
 const Stats = lazy(() => import('@/pages/Stats'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const Activities = lazy(() => import('@/pages/Activities'))
+const DataTools = lazy(() => import('@/pages/DataTools'))
 const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
 
@@ -32,6 +34,8 @@ export default function AppRoutes() {
           <Route path="categories" element={<CategoryManager />} />
           <Route path="stats" element={<Stats />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="activities" element={<Activities />} />
+          <Route path="data-tools" element={<DataTools />} />
         </Route>
       </Routes>
     </Suspense>

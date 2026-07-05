@@ -11,7 +11,9 @@ datasource db {
 // BookStatus: OWNED | READING | FINISHED | WISHLIST
 // UserRole: USER | ADMIN
 // WorkspaceRole: OWNER | ADMIN | MEMBER | VIEWER
-// InvitationStatus: PENDING | ACCEPTED | EXPIRED | REVOKED
+// ActivityStatus: DRAFT | PUBLISHED | CANCELLED
+// OrderStatus: PENDING | PAID | CANCELLED | EXPIRED
+// ImportJobStatus: PENDING | RUNNING | SUCCESS | FAILED
 
 model User {
   id           String   @id @default(uuid())
@@ -28,6 +30,10 @@ model User {
   memberships     WorkspaceMember[]
   invitationsSent Invitation[]      @relation("InvitedBy")
   auditLogs       AuditLog[]
+  activitiesCreated Activity[]
+  orders          Order[]
+  tickets         Ticket[]
+  importJobs      ImportJob[]
 
   @@map("users")
 }
@@ -44,6 +50,10 @@ model Workspace {
   auditLogs   AuditLog[]
   books       Book[]
   categories  Category[]
+  activities  Activity[]
+  orders      Order[]
+  tickets     Ticket[]
+  importJobs  ImportJob[]
 
   @@map("workspaces")
 }
@@ -166,4 +176,114 @@ model Review {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("reviews")
+}
+
+model Activity {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  capacity        Int
+  registeredCount Int      @default(0) @map("registered_count")
+  priceCents      Int      @default(0) @map("price_cents")
+  status          String   @default("DRAFT")
+  startsAt        DateTime @map("starts_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdById String @map("created_by_id")
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  orders  Order[]
+  tickets Ticket[]
+
+  @@index([workspaceId, status])
+  @@index([startsAt])
+  @@map("activities")
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  orderNo     String   @unique @map("order_no")
+  amountCents Int      @map("amount_cents")
+  status      String   @default("PENDING")
+  expiresAt   DateTime @map("expires_at")
+  paidAt      DateTime? @map("paid_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  activityId String   @map("activity_id")
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  paymentEvents PaymentEvent[]
+  ticket        Ticket?
+
+  @@index([workspaceId, userId])
+  @@index([status, expiresAt])
+  @@map("orders")
+}
+
+model PaymentEvent {
+  id         String   @id @default(uuid())
+  provider   String
+  eventId    String   @unique @map("event_id")
+  rawPayload String   @map("raw_payload")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("payment_events")
+}
+
+model Ticket {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  activityId String   @map("activity_id")
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  orderId String @unique @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@index([workspaceId, userId])
+  @@map("tickets")
+}
+
+model ImportJob {
+  id           String   @id @default(uuid())
+  status       String   @default("PENDING")
+  total        Int      @default(0)
+  processed    Int      @default(0)
+  successCount Int      @default(0) @map("success_count")
+  failedCount  Int      @default(0) @map("failed_count")
+  error        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@map("import_jobs")
 }
