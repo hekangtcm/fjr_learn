@@ -2,7 +2,7 @@ import { useState } from 'react'
 import apiClient from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 
-export function DataTools() {
+export default function DataTools() {
   const [jobId, setJobId] = useState<string | null>(null)
 
   const { data: job } = useQuery({

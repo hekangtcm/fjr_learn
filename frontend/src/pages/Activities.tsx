@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useActivities, useCreateOrder, useMockPay } from '@/hooks/useActivities'
 
-export function Activities() {
+export default function Activities() {
   const { data: activities = [] } = useActivities()
   const createOrder = useCreateOrder()
   const mockPay = useMockPay()
