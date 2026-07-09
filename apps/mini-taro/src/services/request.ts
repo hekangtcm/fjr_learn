@@ -16,7 +16,7 @@ interface ApiResponse<T> {
   data: T
 }
 
-const API_BASE_URL = process.env.TARO_APP_API || 'http://47.103.214.67/api/v1'
+import { API_BASE_URL } from '@/config/env'
 
 export async function request<T, TBody = unknown>(options: RequestOptions<TBody>): Promise<T> {
   const token = Taro.getStorageSync<string>('booknest_token') || ''

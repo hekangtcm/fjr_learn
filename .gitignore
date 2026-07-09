@@ -1,3 +1,9 @@
 node_modules/\ndist/\n.env\n.env.local\n*.log\n.DS_Store\ncoverage/
 .env.production
 .env.*
+
+# WeChat mini program private keys
+*.key
+private.*.key
+apps/mini-taro/private.key
+apps/mini-taro/dist/
