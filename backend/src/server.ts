@@ -28,8 +28,9 @@ app.use(helmet({
 }))
 
 // Security: CORS
+const serverIp = 'http://47.103.214.67'
 const allowedOrigins = isProduction
-  ? [process.env.FRONTEND_URL, 'https://www.yourdomain.com'].filter(Boolean)
+  ? [process.env.FRONTEND_URL, serverIp, 'https://www.yourdomain.com'].filter(Boolean)
   : ['http://localhost:4001', 'http://127.0.0.1:4001', 'http://localhost:5173']
 
 app.use(cors({
