@@ -3,6 +3,7 @@ import activityRoutes from './activity.routes'
 import orderRoutes from './order.routes'
 import paymentRoutes from './payment.routes'
 import importRoutes from './import.routes'
+import wechatRoutes from './wechat.routes'
 import { authenticate } from '../middleware/auth'
 import { resolveWorkspace } from '../middleware/workspace'
 import { exportBooks } from '../controllers/export.controller'
@@ -16,6 +17,7 @@ import workspaceRoutes from './workspace.routes'
 const router = Router()
 
 router.use('/auth', authRoutes)
+router.use('/wechat', wechatRoutes)
 router.use('/books', bookRoutes)
 router.use('/books', reviewRoutes)
 router.use('/categories', categoryRoutes)

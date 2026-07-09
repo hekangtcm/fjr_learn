@@ -1,39 +1,26 @@
-import { Button, Input, Text, View } from '@tarojs/components'
-import { useState } from 'react'
+import { Button, Text, View } from '@tarojs/components'
+import Taro, { useRouter } from '@tarojs/taro'
+import { loginByWechat } from '@/services/auth'
 import './index.scss'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const router = useRouter()
+
+  const handleLogin = async () => {
+    try {
+      await loginByWechat()
+      const redirect = router.params.redirect
+      Taro.redirectTo({ url: redirect ? decodeURIComponent(redirect) : '/pages/index/index' })
+    } catch (err: any) {
+      Taro.showToast({ title: err.message || '登录失败', icon: 'none' })
+    }
+  }
 
   return (
-    <View className="page login-page">
-      <Text className="login-page__title">登录 BookNest</Text>
-
-      <View className="form-group">
-        <Text className="form-group__label">邮箱</Text>
-        <Input
-          className="form-group__input"
-          type="text"
-          placeholder="请输入邮箱"
-          value={email}
-          onInput={(e) => setEmail(e.detail.value)}
-        />
-      </View>
-
-      <View className="form-group">
-        <Text className="form-group__label">密码</Text>
-        <Input
-          className="form-group__input"
-          type="password"
-          placeholder="请输入密码"
-          value={password}
-          onInput={(e) => setPassword(e.detail.value)}
-        />
-      </View>
-
-      <Button className="login-btn">登录</Button>
-      <Button className="register-btn">注册</Button>
+    <View className="login-page">
+      <Text className="login-page__title">登录 BookNest Mini</Text>
+      <Text className="login-page__desc">使用微信身份进入你的团队书架</Text>
+      <Button type="primary" onClick={handleLogin}>微信一键登录</Button>
     </View>
   )
 }

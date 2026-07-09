@@ -21,6 +21,13 @@ model User {
   passwordHash String   @map("password_hash")
   name         String
   role         String   @default("USER")
+
+  // 微信身份字段
+  wechatOpenId         String?   @unique @map("wechat_open_id")
+  wechatUnionId        String?   @map("wechat_union_id")
+  wechatSessionKeyHash String?   @map("wechat_session_key_hash")
+  wechatBoundAt        DateTime? @map("wechat_bound_at")
+
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
