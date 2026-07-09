@@ -1,22 +1,24 @@
+import { memo } from 'react'
 import { Image, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import type { Book } from '@booknest/domain'
+import { getCoverThumbUrl } from '@/utils/image'
 import './index.scss'
 
 interface BookCardProps {
   book: Book
 }
 
-export default function BookCard({ book }: BookCardProps) {
+function BookCard({ book }: BookCardProps) {
   const handleOpen = () => {
-    Taro.navigateTo({ url: `/pages/books/detail/index?id=${book.id}` })
+    Taro.navigateTo({ url: `/sub/books/pages/detail/index?id=${book.id}` })
   }
 
   return (
     <View className="book-card" onClick={handleOpen}>
       <Image
         className="book-card__cover"
-        src={book.coverUrl || '/assets/default-cover.png'}
+        src={getCoverThumbUrl(book.coverUrl)}
         mode="aspectFill"
         lazyLoad
       />
@@ -28,3 +30,5 @@ export default function BookCard({ book }: BookCardProps) {
     </View>
   )
 }
+
+export default memo(BookCard)

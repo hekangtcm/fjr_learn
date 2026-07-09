@@ -23,12 +23,12 @@ export default function BookDetailPage() {
 
   useShareAppMessage(() => ({
     title: book ? `推荐一本书：${book.title}` : 'BookNest 书籍详情',
-    path: `/pages/books/detail/index?id=${id}`,
+    path: `/sub/books/pages/detail/index?id=${id}`,
     imageUrl: book?.coverUrl || undefined,
   }))
 
   const handleEdit = () => {
-    Taro.navigateTo({ url: `/pages/books/form/index?id=${id}` })
+    Taro.navigateTo({ url: `/sub/books/pages/form/index?id=${id}` })
   }
 
   const handleDelete = async () => {

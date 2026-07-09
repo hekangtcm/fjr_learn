@@ -8,6 +8,7 @@ import { useWorkspaceStore } from '@/stores/workspace-store'
 import { WorkspaceSwitcher } from '@/components/WorkspaceSwitcher'
 import { canCreateBook } from '@/utils/permissions'
 import { useAuthStore } from '@/stores/auth-store'
+import { getCoverThumbUrl } from '@/utils/image'
 import './index.scss'
 
 const STATUS_OPTIONS = [
@@ -95,7 +96,7 @@ export default function IndexPage() {
   const activeCategory = categories.find((c) => c.id === categoryId)
 
   const handleBookClick = (id: string) => {
-    Taro.navigateTo({ url: `/pages/books/detail/index?id=${id}` })
+    Taro.navigateTo({ url: `/sub/books/pages/detail/index?id=${id}` })
   }
 
   return (
@@ -149,8 +150,9 @@ export default function IndexPage() {
               >
                 <Image
                   className="book-item__cover"
-                  src={book.coverUrl || '/assets/default-cover.png'}
+                  src={getCoverThumbUrl(book.coverUrl)}
                   mode="aspectFill"
+                  lazyLoad
                 />
                 <View className="book-item__info">
                   <Text className="book-item__title">{book.title}</Text>
@@ -188,7 +190,7 @@ export default function IndexPage() {
       {canCreateBook(userRole) && (
         <View
           className="fab"
-          onClick={() => Taro.navigateTo({ url: '/pages/books/form/index' })}
+          onClick={() => Taro.navigateTo({ url: '/sub/books/pages/form/index' })}
         >
           +
         </View>

@@ -33,7 +33,7 @@ export default function OrderResultPage() {
 
   const handleRetry = () => {
     if (orderId) {
-      Taro.redirectTo({ url: `/pages/orders/result/index?orderId=${orderId}` })
+      Taro.redirectTo({ url: `/sub/orders/pages/result/index?orderId=${orderId}` })
     }
   }
 

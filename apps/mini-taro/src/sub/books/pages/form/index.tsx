@@ -136,7 +136,7 @@ export default function BookFormPage() {
 
       Taro.showToast({ title: '保存成功', icon: 'success' })
       setTimeout(() => {
-        Taro.redirectTo({ url: `/pages/books/detail/index?id=${saved.id}` })
+        Taro.redirectTo({ url: `/sub/books/pages/detail/index?id=${saved.id}` })
       }, 800)
     } catch (e: any) {
       Taro.showToast({ title: e.message || '保存失败', icon: 'none' })
