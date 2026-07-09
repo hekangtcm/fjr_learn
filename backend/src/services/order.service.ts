@@ -60,3 +60,16 @@ export async function listMyOrders(userId: string, workspaceId: string) {
     orderBy: { createdAt: 'desc' },
   })
 }
+
+export async function getOrder(orderId: string, userId: string, workspaceId: string) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId, workspaceId },
+    include: {
+      activity: true,
+      ticket: true,
+    },
+  })
+
+  if (!order) throw new ApiError(404, '订单不存在')
+  return order
+}

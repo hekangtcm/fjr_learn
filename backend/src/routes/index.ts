@@ -14,7 +14,22 @@ import reviewRoutes from './review.routes'
 import statsRoutes from './stats.routes'
 import workspaceRoutes from './workspace.routes'
 
+import wechatPayRoutes from './wechat-pay.routes'
+
 const router = Router()
+
+router.use('/auth', authRoutes)
+router.use('/wechat', wechatRoutes)
+router.use('/books', bookRoutes)
+router.use('/books', reviewRoutes)
+router.use('/categories', categoryRoutes)
+router.use('/stats', statsRoutes)
+router.use('/workspaces', workspaceRoutes)
+router.use('/activities', activityRoutes)
+router.use('/orders', orderRoutes)
+router.use('/payments', paymentRoutes)
+router.use('/wechat-pay', wechatPayRoutes)
+router.use('/imports', importRoutes)
 
 router.use('/auth', authRoutes)
 router.use('/wechat', wechatRoutes)

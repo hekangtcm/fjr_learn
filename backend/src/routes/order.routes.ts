@@ -10,6 +10,8 @@ const router = Router()
 router.use(authenticate, resolveWorkspace)
 
 router.get('/my', orderController.listMyOrders)
+router.get('/:id', orderController.getOrder)
+router.post('/', validateBody(z.object({ activityId: z.string().uuid() })), orderController.create)
 router.post('/', validateBody(z.object({ activityId: z.string().uuid() })), orderController.create)
 
 export default router

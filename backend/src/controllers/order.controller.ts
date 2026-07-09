@@ -11,3 +11,8 @@ export async function create(req: Request, res: Response) {
   const order = await orderService.createOrder(req.user!.id, req.workspace!.id, req.body.activityId)
   ResponseUtil.success(res, order, '订单创建成功', 201)
 }
+
+export async function getOrder(req: Request, res: Response) {
+  const order = await orderService.getOrder(req.params.id as string, req.user!.id, req.workspace!.id)
+  ResponseUtil.success(res, order)
+}

@@ -12,7 +12,7 @@ datasource db {
 // UserRole: USER | ADMIN
 // WorkspaceRole: OWNER | ADMIN | MEMBER | VIEWER
 // ActivityStatus: DRAFT | PUBLISHED | CANCELLED
-// OrderStatus: PENDING | PAID | CANCELLED | EXPIRED
+// OrderStatus: PENDING | PAID | CANCELLED | EXPIRED | FAILED
 // ImportJobStatus: PENDING | RUNNING | SUCCESS | FAILED
 
 model User {
@@ -239,16 +239,20 @@ model Order {
 }
 
 model PaymentEvent {
-  id         String   @id @default(uuid())
-  provider   String
-  eventId    String   @unique @map("event_id")
-  rawPayload String   @map("raw_payload")
-  createdAt  DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid())
+  provider      String
+  eventId       String   @unique @map("event_id")
+  transactionId String?  @map("transaction_id")
+  outTradeNo    String?  @map("out_trade_no")
+  eventType     String?  @map("event_type")
+  rawPayload    String   @map("raw_payload")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   orderId String @map("order_id")
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+  @@unique([provider, transactionId])
   @@map("payment_events")
 }
 
