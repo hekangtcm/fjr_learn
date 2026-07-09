@@ -298,3 +298,49 @@ model ImportJob {
   @@index([workspaceId, createdAt])
   @@map("import_jobs")
 }
+
+model SubscriptionRecord {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  workspaceId  String?  @map("workspace_id")
+  templateId   String   @map("template_id")
+  scene        String
+  status       String   // ACCEPTED / REJECTED / BANNED
+  rawResult    String?  @map("raw_result")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([userId, templateId, scene])
+  @@map("subscription_records")
+}
+
+model ContentSecurityCheck {
+  id            String   @id @default(uuid())
+  workspaceId   String?  @map("workspace_id")
+  userId        String?  @map("user_id")
+  targetType    String   @map("target_type") // BOOK / REVIEW / ACTIVITY / IMAGE
+  targetId      String?  @map("target_id")
+  contentType   String   @map("content_type") // TEXT / IMAGE
+  contentHash   String   @map("content_hash")
+  status        String   // PASS / REVIEW / REJECT / ERROR
+  provider      String   @default("WECHAT")
+  rawResult     String?  @map("raw_result")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@map("content_security_checks")
+}
+
+model CustomerServiceEvent {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  workspaceId  String?  @map("workspace_id")
+  scene        String
+  refType      String?  @map("ref_type")
+  refId        String?  @map("ref_id")
+  payload      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([userId, scene])
+  @@map("customer_service_events")
+}
