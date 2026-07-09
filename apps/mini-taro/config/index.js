@@ -13,8 +13,7 @@ const config = {
   plugins: [],
   defineConstants: {},
   alias: {
-    '@': require('path').resolve(__dirname, '..', 'src'),
-    '@booknest/domain': require('path').resolve(__dirname, '../../packages/domain/src')
+    '@': require('path').resolve(__dirname, '..', 'src')
   },
   copy: {
     patterns: [],
