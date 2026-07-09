@@ -23,7 +23,7 @@ export class BookController {
   async getById(req: Request, res: Response) {
     const workspaceId = req.workspace?.id
     if (!workspaceId) {
-      return res.status(400).json({ code: 400, message: '缺少 Workspace' })
+      return res.status(404).json({ code: 404, message: 'Book not found' })
     }
     const book = await bookService.getById(workspaceId, req.params.id as string)
     ResponseUtil.success(res, book)

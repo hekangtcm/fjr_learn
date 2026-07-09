@@ -70,6 +70,20 @@ export class AuthService {
     }
     return user
   }
+
+  async refresh(refreshToken: string) {
+    try {
+      const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as any
+      const user = await prisma.user.findUnique({ where: { id: decoded.id } })
+      if (!user) {
+        throw new ApiError(401, 'Invalid token')
+      }
+      const token = generateToken({ id: user.id, email: user.email, role: user.role })
+      return { token, user: { id: user.id, email: user.email, name: user.name, role: user.role } }
+    } catch {
+      throw new ApiError(401, 'Invalid or expired token')
+    }
+  }
 }
 
 export const authService = new AuthService()

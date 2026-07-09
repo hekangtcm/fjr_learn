@@ -17,10 +17,12 @@ import wechatPayRoutes from './wechat-pay.routes'
 import subscriptionRoutes from './subscription.routes'
 import customerServiceRoutes from './customer-service.routes'
 import adminRoutes from './admin.routes'
+import usersRoutes from './users.routes'
 
 const router = Router()
 
 router.use('/auth', authRoutes)
+router.use('/users', usersRoutes)
 router.use('/wechat', wechatRoutes)
 router.use('/books', bookRoutes)
 router.use('/books', reviewRoutes)

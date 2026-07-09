@@ -15,6 +15,27 @@ export class AuthController {
     ResponseUtil.success(res, result)
   }
 
+  async refresh(req: Request, res: Response) {
+    const { refreshToken } = req.body
+    if (!refreshToken) {
+      return ResponseUtil.error(res, '缺少 refreshToken', 400)
+    }
+    const result = await authService.refresh(refreshToken)
+    ResponseUtil.success(res, result)
+  }
+
+  async logout(req: Request, res: Response) {
+    ResponseUtil.success(res, { message: '已退出登录' })
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    const { email } = req.body
+    if (!email) {
+      return ResponseUtil.error(res, '缺少 email', 400)
+    }
+    ResponseUtil.success(res, { message: '如果邮箱存在，重置链接已发送' })
+  }
+
   async me(req: Request, res: Response) {
     const user = await authService.getMe(req.user!.id)
     ResponseUtil.success(res, user)

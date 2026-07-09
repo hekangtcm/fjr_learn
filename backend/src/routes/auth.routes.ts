@@ -3,7 +3,7 @@ import { body } from 'express-validator'
 import { authController } from '../controllers/auth.controller'
 import { authenticate } from '../middleware/auth'
 import { validate } from '../middleware/validate'
-import { authLimiter } from '../middleware/rateLimit'
+import { registerLimiter, loginLimiter } from '../middleware/rateLimit'
 
 const router = Router()
 
@@ -18,8 +18,11 @@ const loginRules = [
   body('password').notEmpty(),
 ]
 
-router.post('/register', authLimiter, registerRules, validate, authController.register)
-router.post('/login', authLimiter, loginRules, validate, authController.login)
+router.post('/register', registerLimiter, registerRules, validate, authController.register)
+router.post('/login', loginLimiter, loginRules, validate, authController.login)
+router.post('/refresh', authController.refresh)
+router.post('/logout', authenticate, authController.logout)
+router.post('/forgot-password', authController.forgotPassword)
 router.get('/me', authenticate, authController.me)
 
 export default router
