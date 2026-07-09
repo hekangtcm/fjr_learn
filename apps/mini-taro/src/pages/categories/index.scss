@@ -1,0 +1,18 @@
+.category-list {
+  padding: 24rpx;
+}
+
+.category-item {
+  padding: 32rpx 24rpx;
+  margin-bottom: 16rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  border-left: 8rpx solid;
+  box-shadow: 0 2rpx 8rpx rgba(15, 23, 42, 0.04);
+}
+
+.category-item__name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #0f172a;
+}
