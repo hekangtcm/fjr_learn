@@ -1,4 +1,162 @@
+.search-bar {
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+
+  &__input {
+    height: 72rpx;
+    background: #f3f4f6;
+    border-radius: 36rpx;
+    padding: 0 32rpx;
+    font-size: 28rpx;
+  }
+}
+
+.filter-bar {
+  display: flex;
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 24rpx;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 24rpx;
+  background: #f3f4f6;
+  border-radius: 32rpx;
+
+  &__text {
+    font-size: 26rpx;
+    color: #374151;
+  }
+
+  &__arrow {
+    font-size: 20rpx;
+    color: #9ca3af;
+    margin-left: 8rpx;
+  }
+}
+
 .book-list {
-  padding: 24rpx;
-  height: calc(100vh - 200rpx);
+  padding: 0 24rpx;
+  height: calc(100vh - 280rpx);
+}
+
+.book-item {
+  display: flex;
+  padding: 24rpx 0;
+  border-bottom: 1px solid #f3f4f6;
+
+  &__cover {
+    width: 140rpx;
+    height: 200rpx;
+    border-radius: 12rpx;
+    flex-shrink: 0;
+    background: #f3f4f6;
+  }
+
+  &__info {
+    flex: 1;
+    margin-left: 24rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  &__title {
+    font-size: 32rpx;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8rpx;
+  }
+
+  &__author {
+    font-size: 26rpx;
+    color: #6b7280;
+    margin-bottom: 16rpx;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 12rpx;
+  }
+
+  &__status {
+    font-size: 22rpx;
+    padding: 4rpx 16rpx;
+    border-radius: 8rpx;
+    font-weight: 500;
+
+    &--owned {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &--reading {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &--finished {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    &--wishlist {
+      background: #fce7f3;
+      color: #9d174d;
+    }
+  }
+
+  &__category {
+    font-size: 22rpx;
+    padding: 4rpx 16rpx;
+    border-radius: 8rpx;
+    color: #fff;
+  }
+}
+
+.state-message {
+  padding: 80rpx 48rpx;
+  text-align: center;
+
+  &__text {
+    font-size: 32rpx;
+    color: #6b7280;
+    margin-bottom: 16rpx;
+  }
+
+  &__sub {
+    font-size: 26rpx;
+    color: #9ca3af;
+  }
+}
+
+.load-more {
+  padding: 32rpx;
+  text-align: center;
+
+  &__text {
+    font-size: 24rpx;
+    color: #9ca3af;
+  }
+}
+
+.fab {
+  position: fixed;
+  right: 32rpx;
+  bottom: 160rpx;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  background: #2563eb;
+  color: #fff;
+  font-size: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(37, 99, 235, 0.3);
+  z-index: 100;
 }

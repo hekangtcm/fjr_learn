@@ -1,33 +1,102 @@
 .form-page {
-  padding: 0 32rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.form-scroll {
+  flex: 1;
+  padding: 32rpx;
 }
 
 .form-group {
   margin-bottom: 32rpx;
+
+  &__label {
+    display: block;
+    font-size: 28rpx;
+    color: #374151;
+    font-weight: 500;
+    margin-bottom: 12rpx;
+  }
+
+  &__input {
+    width: 100%;
+    height: 88rpx;
+    padding: 0 24rpx;
+    border: 2rpx solid #e5e7eb;
+    border-radius: 16rpx;
+    font-size: 28rpx;
+    background: #fff;
+    box-sizing: border-box;
+  }
+
+  &__picker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 88rpx;
+    padding: 0 24rpx;
+    border: 2rpx solid #e5e7eb;
+    border-radius: 16rpx;
+    font-size: 28rpx;
+    background: #fff;
+    box-sizing: border-box;
+  }
+
+  &__picker-arrow {
+    font-size: 20rpx;
+    color: #9ca3af;
+  }
+
+  &__textarea {
+    width: 100%;
+    min-height: 200rpx;
+    padding: 16rpx 24rpx;
+    border: 2rpx solid #e5e7eb;
+    border-radius: 16rpx;
+    font-size: 28rpx;
+    background: #fff;
+    box-sizing: border-box;
+  }
 }
 
-.form-group__label {
-  display: block;
-  font-size: 28rpx;
-  color: #334155;
-  margin-bottom: 12rpx;
-}
-
-.form-group__input {
-  width: 100%;
-  height: 88rpx;
-  padding: 0 24rpx;
-  border: 2rpx solid #e2e8f0;
+.cover-uploader {
+  width: 240rpx;
+  height: 320rpx;
+  border: 2rpx dashed #d1d5db;
   border-radius: 16rpx;
-  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    border-radius: 16rpx;
+  }
+
+  &__placeholder {
+    font-size: 60rpx;
+    color: #d1d5db;
+  }
+}
+
+.form-actions {
+  padding: 24rpx 32rpx;
   background: #fff;
-  box-sizing: border-box;
+  border-top: 1px solid #e5e7eb;
 }
 
 .submit-btn {
-  margin-top: 48rpx;
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
   background: #2563eb;
   color: #fff;
   border-radius: 16rpx;
   font-size: 30rpx;
+  font-weight: 500;
 }
