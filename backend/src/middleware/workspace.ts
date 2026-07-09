@@ -38,6 +38,18 @@ export async function resolveWorkspace(req: Request, _res: Response, next: NextF
   }
 }
 
+export async function resolveWorkspaceOptional(req: Request, _res: Response, next: NextFunction) {
+  try {
+    const workspaceId = req.header('X-Workspace-Id')
+    if (workspaceId) {
+      req.workspace = { id: workspaceId, role: 'GUEST' }
+    }
+    next()
+  } catch (err) {
+    next(err)
+  }
+}
+
 export function requireWorkspaceRole(minRole: string) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.workspace) return next(new ApiError(400, 'Workspace 未解析'))

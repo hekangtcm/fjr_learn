@@ -5,7 +5,10 @@ import { ResponseUtil } from '../utils/response'
 export class BookController {
   async list(req: Request, res: Response) {
     const query = (req as any).validatedQuery || req.query
-    const workspaceId = req.workspace!.id
+    const workspaceId = req.workspace?.id
+    if (!workspaceId) {
+      return ResponseUtil.success(res, { items: [], total: 0, page: 1, pageSize: 10 })
+    }
     const result = await bookService.list(workspaceId, {
       page: Number(query.page) || 1,
       pageSize: Number(query.pageSize) || 10,
@@ -18,7 +21,11 @@ export class BookController {
   }
 
   async getById(req: Request, res: Response) {
-    const book = await bookService.getById(req.workspace!.id, req.params.id as string)
+    const workspaceId = req.workspace?.id
+    if (!workspaceId) {
+      return res.status(400).json({ code: 400, message: '缺少 Workspace' })
+    }
+    const book = await bookService.getById(workspaceId, req.params.id as string)
     ResponseUtil.success(res, book)
   }
 

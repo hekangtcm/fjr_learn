@@ -20,7 +20,14 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     })
   }
 
-  // Multer 文件上传错误
+  // CORS 错误（由 cors 中间件抛出）
+  if (err.message?.includes('CORS') || err.message?.includes('Not allowed by CORS')) {
+    logger.warn('CORS blocked', { origin: (req as any).headers?.origin, path: req.path })
+    return res.status(403).json({
+      code: 403,
+      message: '请求来源不被允许',
+    })
+  }
   if (err.name === 'MulterError') {
     logger.warn('File upload error', { error: err.message, path: req.path })
     return res.status(400).json({

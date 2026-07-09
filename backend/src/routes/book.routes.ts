@@ -5,7 +5,7 @@ import { authenticate } from '../middleware/auth'
 import { validateBody, validateQuery } from '../middleware/zodValidate'
 import { upload } from '../middleware/upload'
 import { uploadLimiter } from '../middleware/rateLimit'
-import { resolveWorkspace } from '../middleware/workspace'
+import { resolveWorkspace, resolveWorkspaceOptional } from '../middleware/workspace'
 import {
   createBookBodySchema,
   updateBookBodySchema,
@@ -14,10 +14,13 @@ import {
 
 const router = Router()
 
-router.use(authenticate, resolveWorkspace)
-
+// 公开路由：浏览不需要认证，可选 Workspace
+router.use(resolveWorkspaceOptional)
 router.get('/', validateQuery(listBooksQuerySchema), bookController.list)
 router.get('/:id', bookController.getById)
+
+// 需要认证的路由
+router.use(authenticate, resolveWorkspace)
 router.post('/', validateBody(createBookBodySchema), bookController.create)
 router.put('/:id', validateBody(updateBookBodySchema), bookController.update)
 router.delete('/:id', bookController.delete)
