@@ -1,8 +1,11 @@
 import { Router } from 'express'
 import { ResponseUtil } from '../utils/response'
 import prisma from '../lib/prisma'
+import { authenticate } from '../middleware/auth'
 
 const router = Router()
+
+router.use(authenticate)
 
 router.get('/', async (req, res, next) => {
   try {

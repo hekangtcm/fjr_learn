@@ -34,7 +34,14 @@ const allowedOrigins = isProduction
   : ['http://localhost:4001', 'http://127.0.0.1:4001', 'http://localhost:5173']
 
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      logger.warn('CORS blocked', { origin })
+      callback(null, false)
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Workspace-Id'],
@@ -65,5 +72,10 @@ app.use('/api/v1', apiLimiter)
 
 app.use('/api/v1', routes)
 app.use(errorHandler)
+
+// 404 catch-all: 所有未匹配的 API 路径返回 JSON
+app.use((_req, res) => {
+  res.status(404).json({ code: 404, message: 'API endpoint not found' })
+})
 
 export default app
