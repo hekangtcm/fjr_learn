@@ -1,6 +1,6 @@
 import swaggerUi from 'swagger-ui-express'
 import { generateOpenApiDocument } from './lib/openapi'
-import express from 'express'
+import express, { type Request, type Response } from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import { errorHandler } from './middleware/errorHandler'
@@ -16,6 +16,7 @@ const app = express()
 
 app.disable('x-powered-by')
 app.set('case sensitive routing', true)
+app.set('strict routing', true)
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -30,10 +31,11 @@ app.use(helmet({
   } : false,
 }))
 
-// Security: CORS
+// Security: CORS — 白名单 + 不反射 Origin，不携带 Credentials
+// 注意：JWT 认证通过 Authorization header 传递，无需 Cookie/Credentials
 const serverIp = 'http://47.103.214.67'
 const allowedOrigins = isProduction
-  ? [process.env.FRONTEND_URL, serverIp, 'https://www.yourdomain.com'].filter(Boolean)
+  ? [serverIp, 'https://www.yourdomain.com'].filter(Boolean) as string[]
   : ['http://localhost:4001', 'http://127.0.0.1:4001', 'http://localhost:5173']
 
 app.use(cors({
@@ -45,9 +47,12 @@ app.use(cors({
       callback(null, false)
     }
   },
-  credentials: true,
+  // 不设置 credentials: true — 不使用 Cookie，JWT 通过 Header 传递
+  // 避免 CORS 反射 + Credentials 的安全漏洞
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Workspace-Id'],
+  optionsSuccessStatus: 204,
+  maxAge: 86400,
 }))
 
 // 安全：禁止 HEAD 请求挂起（不支持的路由直接返回 204）
@@ -88,6 +93,11 @@ app.use(requestLogger)
 
 // Health check routes (before rate limiting)
 app.use(healthRoutes)
+
+// 也挂载 /api/v1/health 供统一前缀访问
+app.get('/api/v1/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
 
 // OpenAPI JSON endpoint
 const openApiDocument = generateOpenApiDocument()
