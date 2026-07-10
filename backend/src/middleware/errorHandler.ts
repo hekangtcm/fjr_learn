@@ -28,6 +28,15 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
       message: '请求来源不被允许',
     })
   }
+
+  // 安全：URIError（UTF-8 overlong 编码等）
+  if (err instanceof URIError) {
+    return res.status(400).json({
+      code: 400,
+      message: 'Invalid URL encoding',
+    })
+  }
+
   if (err.name === 'MulterError') {
     logger.warn('File upload error', { error: err.message, path: req.path })
     return res.status(400).json({

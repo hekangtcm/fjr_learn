@@ -14,6 +14,9 @@ import { requestLogger } from './lib/requestLogger'
 
 const app = express()
 
+app.disable('x-powered-by')
+app.set('case sensitive routing', true)
+
 const isProduction = process.env.NODE_ENV === 'production'
 
 // Security: Helmet
@@ -46,6 +49,37 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Workspace-Id'],
 }))
+
+// 安全：禁止 HEAD 请求挂起（不支持的路由直接返回 204）
+app.use((req, res, next) => {
+  if (req.method === 'HEAD' && !req.route) {
+    res.status(204).end()
+    return
+  }
+  next()
+})
+
+// 安全：防止 UTF-8 overlong 编码攻击（URIError）
+app.use((req, res, next) => {
+  try {
+    decodeURIComponent(req.url)
+    next()
+  } catch (err) {
+    res.status(400).json({ code: 400, message: 'Invalid URL encoding' })
+  }
+})
+
+// 安全：禁止 UTF-7 等非 UTF-8 编码
+app.use((req, res, next) => {
+  const contentType = req.headers['content-type']
+  if (contentType) {
+    const ct = contentType.toLowerCase()
+    if (ct.includes('charset=') && !ct.includes('utf-8')) {
+      return res.status(415).json({ code: 415, message: 'Unsupported charset, only UTF-8 is supported' })
+    }
+  }
+  next()
+})
 
 app.use(express.json())
 
