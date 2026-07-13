@@ -10,7 +10,12 @@ const router = Router()
 const registerRules = [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
-  body('name').notEmpty().trim(),
+  body('name').notEmpty().trim().custom((value: string) => {
+    if (/<[^>]*>/.test(value)) {
+      throw new Error('姓名不能包含 HTML 标签')
+    }
+    return true
+  }),
 ]
 
 const loginRules = [

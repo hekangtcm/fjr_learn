@@ -55,9 +55,9 @@ app.use(cors({
   maxAge: 86400,
 }))
 
-// 安全：禁止 HEAD 请求挂起（不支持的路由直接返回 204）
+// 安全：禁止 HEAD 请求挂起（包括 curl -X HEAD 非标准用法）
 app.use((req, res, next) => {
-  if (req.method === 'HEAD' && !req.route) {
+  if (req.method === 'HEAD') {
     res.status(204).end()
     return
   }
@@ -92,18 +92,22 @@ app.use((req, res, next) => {
   function hasNoSQLKeys(obj: any): boolean {
     if (!obj || typeof obj !== 'object') return false
     for (const key of Object.keys(obj)) {
-      if (key.startsWith('$') || key.includes('.')) return true
+      // MongoDB 操作符：以 $ 开头、包含 .（点注入）、或键名中包含 $（如 search[$ne]）
+      if (key.startsWith('$') || key.includes('.') || key.includes('$')) return true
       const val = obj[key]
       if (val !== null && typeof val === 'object' && hasNoSQLKeys(val)) return true
     }
     return false
   }
-  // 方法 2：检查原始 URL 字符串（qs 库可能过滤 $ 键，兜底检测）
+  // 方法 2：检查原始 URL 字符串
   const rawUrl = req.url || ''
+  const decodedUrl = decodeURIComponent(rawUrl)
   // 检测 URL 编码的 %24（$）出现在方括号中，如 search%5B%24ne%5D
   const hasEncodedOperators = /%5B%24[a-zA-Z]/.test(rawUrl)
+  // 检测字面量 $ 操作符，如 search[$ne]、a.$ne
+  const hasLiteralOperators = /\[\$[a-zA-Z]/.test(decodedUrl) || /\.\$[a-zA-Z]/.test(decodedUrl)
 
-  if (hasNoSQLKeys(req.query) || hasNoSQLKeys(req.body) || hasEncodedOperators) {
+  if (hasNoSQLKeys(req.query) || hasNoSQLKeys(req.body) || hasEncodedOperators || hasLiteralOperators) {
     return res.status(400).json({ code: 400, message: 'Invalid query parameter' })
   }
   next()
@@ -136,6 +140,9 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
 // OpenAPI JSON endpoint
 const openApiDocument = generateOpenApiDocument()
 app.get('/openapi.json', (_req, res) => {
+  res.json(openApiDocument)
+})
+app.get('/api/v1/openapi.json', (_req, res) => {
   res.json(openApiDocument)
 })
 

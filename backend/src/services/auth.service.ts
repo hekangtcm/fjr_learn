@@ -3,6 +3,16 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { ApiError } from '../utils/errors'
 
+// XSS 防护：HTML 转义
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 export function generateToken(user: { id: string; email: string; role: string }) {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
@@ -19,15 +29,16 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
+    const safeName = escapeHtml(name)
 
     const user = await prisma.$transaction(async (tx) => {
       const createdUser = await tx.user.create({
-        data: { email, passwordHash, name },
+        data: { email, passwordHash, name: safeName },
       })
 
       await tx.workspace.create({
         data: {
-          name: `${name} 的个人书架`,
+          name: `${safeName} 的个人书架`,
           description: '默认 Workspace',
           members: {
             create: {

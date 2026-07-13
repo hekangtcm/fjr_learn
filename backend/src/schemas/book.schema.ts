@@ -36,18 +36,26 @@ export const updateBookBodySchema = createBookBodySchema.partial()
 export const listBooksQuerySchema = z.object({
   page: z.string()
     .optional()
+    .refine((val) => {
+      if (!val) return true
+      const num = Number(val)
+      return !Number.isNaN(num) && num >= 1 && Number.isInteger(num)
+    }, { message: 'Invalid page parameter, must be a positive integer' })
     .transform((val) => {
       if (!val) return 1
-      const num = Number(val)
-      return Number.isNaN(num) || num < 1 ? 1 : num
+      return Number(val)
     })
     .pipe(z.number().int().positive().max(10000)),
   pageSize: z.string()
     .optional()
+    .refine((val) => {
+      if (!val) return true
+      const num = Number(val)
+      return !Number.isNaN(num) && num >= 1 && num <= 100 && Number.isInteger(num)
+    }, { message: 'Invalid pageSize parameter, must be an integer between 1 and 100' })
     .transform((val) => {
       if (!val) return 10
-      const num = Number(val)
-      return Number.isNaN(num) || num < 1 ? 10 : num
+      return Number(val)
     })
     .pipe(z.number().int().positive().max(100)),
   status: bookStatusSchema.optional(),

@@ -11,7 +11,10 @@ export const userPublicSchema = z.object({
 export const registerBodySchema = z.object({
   email: z.string().email('邮箱格式不正确'),
   password: z.string().min(6, '密码至少 6 位'),
-  name: z.string().min(1, '姓名不能为空').max(50),
+  name: z.string()
+    .min(1, '姓名不能为空')
+    .max(50, '姓名不能超过 50 字符')
+    .refine((val) => !/<[^>]*>/.test(val), { message: '姓名不能包含 HTML 标签' }),
 })
 
 export const loginBodySchema = z.object({

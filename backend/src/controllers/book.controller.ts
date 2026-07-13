@@ -9,9 +9,30 @@ export class BookController {
     if (!workspaceId) {
       return ResponseUtil.success(res, { items: [], total: 0, page: 1, pageSize: 10 })
     }
+
+    // 分页参数校验 — 显式提供但非法时返回 400
+    const pageRaw = query.page
+    const pageSizeRaw = query.pageSize
+
+    if (pageRaw !== undefined) {
+      const pageNum = Number(pageRaw)
+      if (!Number.isInteger(pageNum) || pageNum < 1) {
+        return res.status(400).json({ code: 400, message: 'Invalid page parameter, must be a positive integer' })
+      }
+    }
+    if (pageSizeRaw !== undefined) {
+      const pageSizeNum = Number(pageSizeRaw)
+      if (!Number.isInteger(pageSizeNum) || pageSizeNum < 1 || pageSizeNum > 100) {
+        return res.status(400).json({ code: 400, message: 'Invalid pageSize parameter, must be an integer between 1 and 100' })
+      }
+    }
+
+    const page = Number.isInteger(Number(pageRaw)) && Number(pageRaw) > 0 ? Number(pageRaw) : 1
+    const pageSize = Number.isInteger(Number(pageSizeRaw)) && Number(pageSizeRaw) > 0 && Number(pageSizeRaw) <= 100 ? Number(pageSizeRaw) : 10
+
     const result = await bookService.list(workspaceId, {
-      page: Number(query.page) || 1,
-      pageSize: Number(query.pageSize) || 10,
+      page,
+      pageSize,
       status: query.status as any,
       categoryId: query.categoryId as string,
       sortBy: query.sortBy as string,
