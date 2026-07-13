@@ -1,6 +1,6 @@
 import swaggerUi from 'swagger-ui-express'
 import { generateOpenApiDocument } from './lib/openapi'
-import express, { type Request, type Response } from 'express'
+import express, { type Request, type Response, type NextFunction } from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import { errorHandler } from './middleware/errorHandler'
@@ -86,7 +86,41 @@ app.use((req, res, next) => {
   next()
 })
 
-app.use(express.json())
+// 安全：防止 NoSQL 注入（DoS）— 拒绝包含 MongoDB 操作符的查询参数
+app.use((req, res, next) => {
+  // 方法 1：检查解码后的对象键（深度遍历）
+  function hasNoSQLKeys(obj: any): boolean {
+    if (!obj || typeof obj !== 'object') return false
+    for (const key of Object.keys(obj)) {
+      if (key.startsWith('$') || key.includes('.')) return true
+      const val = obj[key]
+      if (val !== null && typeof val === 'object' && hasNoSQLKeys(val)) return true
+    }
+    return false
+  }
+  // 方法 2：检查原始 URL 字符串（qs 库可能过滤 $ 键，兜底检测）
+  const rawUrl = req.url || ''
+  // 检测 URL 编码的 %24（$）出现在方括号中，如 search%5B%24ne%5D
+  const hasEncodedOperators = /%5B%24[a-zA-Z]/.test(rawUrl)
+
+  if (hasNoSQLKeys(req.query) || hasNoSQLKeys(req.body) || hasEncodedOperators) {
+    return res.status(400).json({ code: 400, message: 'Invalid query parameter' })
+  }
+  next()
+})
+
+// 安全：JSON 解析失败返回 400 而不是 500
+app.use(express.json({
+  type: 'application/json',
+}))
+
+// 捕获 JSON 解析错误（SyntaxError from body-parser）
+app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ code: 400, message: 'Invalid JSON' })
+  }
+  next(err)
+})
 
 // HTTP request logging
 app.use(requestLogger)

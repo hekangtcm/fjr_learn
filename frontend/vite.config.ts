@@ -25,6 +25,18 @@ export default defineConfig({
     },
   },
   build: {
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+      mangle: {
+        properties: {
+          regex: /^_/,  // 混淆下划线开头的私有属性
+        },
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: (id) => {

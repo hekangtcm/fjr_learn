@@ -7,6 +7,11 @@ export interface AuthRequest extends Request {
 }
 
 export function authenticate(req: AuthRequest, _res: Response, next: NextFunction) {
+  // 安全：CORS 预检请求不携带认证头，直接放行
+  if (req.method === 'OPTIONS') {
+    return next()
+  }
+
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) {
     throw new ApiError(401, '未提供认证令牌')
